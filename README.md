@@ -2,7 +2,9 @@
 
 A focused task manager built with **MongoDB**, **Express**, **React**, and **Node.js**. Create, edit, complete, filter, and delete tasks — persisted in MongoDB Atlas and deployable on Vercel.
 
-**Live demo:** _Add your Vercel URL after deploy_
+**Live demo:** [https://task-manager-alpha-vert.vercel.app/](https://task-manager-alpha-vert.vercel.app/)
+
+**Walkthrough video:** [Google Drive](https://drive.google.com/file/d/1tml2zFLwRHe5Bspz6qaLlVnhM6nd4nA6/view?usp=drive_link)
 
 **Repository:** [github.com/lavpranjale/task-manager](https://github.com/lavpranjale/task-manager)
 
@@ -12,7 +14,7 @@ A focused task manager built with **MongoDB**, **Express**, **React**, and **Nod
 
 - Create tasks (title + optional description)
 - Mark complete / incomplete
-- Inline edit and delete (with confirm)
+- Inline edit and delete (custom confirm modal)
 - Filters: All / Active / Done
 - Loading, empty, and error states
 - REST API with validation

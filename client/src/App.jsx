@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createTask, deleteTask, fetchTasks, updateTask } from './api/tasks';
+import ConfirmModal from './components/ConfirmModal';
 import FilterBar from './components/FilterBar';
 import TaskForm from './components/TaskForm';
 import TaskList from './components/TaskList';
@@ -12,19 +13,20 @@ export default function App() {
   const [creating, setCreating] = useState(false);
   const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState('');
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
-  const loadTasks = useCallback(async () => {
-    setLoading(true);
+  const loadTasks = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     setError('');
     try {
-      // Always fetch the full list so badge counts stay accurate on every tab.
       const data = await fetchTasks('all');
       setTasks(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err.message || 'Could not load tasks');
-      setTasks([]);
+      if (!silent) setTasks([]);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
@@ -58,7 +60,7 @@ export default function App() {
     try {
       await createTask(payload);
       if (filter === 'completed') setFilter('all');
-      await loadTasks();
+      await loadTasks({ silent: true });
     } catch (err) {
       setError(err.message || 'Could not create task');
     } finally {
@@ -69,10 +71,14 @@ export default function App() {
   async function handleToggle(task) {
     setBusyId(task._id);
     setError('');
+    const previous = tasks;
+    setTasks((prev) =>
+      prev.map((t) => (t._id === task._id ? { ...t, completed: !t.completed } : t))
+    );
     try {
       await updateTask(task._id, { completed: !task.completed });
-      await loadTasks();
     } catch (err) {
+      setTasks(previous);
       setError(err.message || 'Could not update task');
     } finally {
       setBusyId(null);
@@ -84,7 +90,7 @@ export default function App() {
     setError('');
     try {
       await updateTask(id, updates);
-      await loadTasks();
+      await loadTasks({ silent: true });
     } catch (err) {
       setError(err.message || 'Could not save changes');
     } finally {
@@ -92,15 +98,24 @@ export default function App() {
     }
   }
 
-  async function handleDelete(id) {
-    setBusyId(id);
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    const id = pendingDelete._id;
+    const previous = tasks;
+
+    setDeleting(true);
     setError('');
+    // Remove immediately so empty state appears without a loading flash.
+    setTasks((prev) => prev.filter((t) => t._id !== id));
+    setPendingDelete(null);
+
     try {
       await deleteTask(id);
-      await loadTasks();
     } catch (err) {
+      setTasks(previous);
       setError(err.message || 'Could not delete task');
     } finally {
+      setDeleting(false);
       setBusyId(null);
     }
   }
@@ -153,7 +168,7 @@ export default function App() {
             filter={filter}
             onToggle={handleToggle}
             onUpdate={handleUpdate}
-            onDelete={handleDelete}
+            onRequestDelete={setPendingDelete}
             busyId={busyId}
           />
         </section>
@@ -162,6 +177,22 @@ export default function App() {
       <footer className="footer">
         <span>Built with React, Express, and MongoDB</span>
       </footer>
+
+      <ConfirmModal
+        open={Boolean(pendingDelete)}
+        title="Delete this task?"
+        message={
+          pendingDelete
+            ? `“${pendingDelete.title}” will be removed permanently. This can’t be undone.`
+            : ''
+        }
+        confirmLabel="Delete task"
+        busy={deleting}
+        onCancel={() => {
+          if (!deleting) setPendingDelete(null);
+        }}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

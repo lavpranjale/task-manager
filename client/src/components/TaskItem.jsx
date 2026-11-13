@@ -17,7 +17,7 @@ function formatWhen(iso) {
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
-export default function TaskItem({ task, onToggle, onUpdate, onDelete, busyId }) {
+export default function TaskItem({ task, onToggle, onUpdate, onRequestDelete, busyId }) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || '');
@@ -44,13 +44,6 @@ export default function TaskItem({ task, onToggle, onUpdate, onDelete, busyId })
       description: description.trim(),
     });
     setEditing(false);
-  }
-
-  async function handleDelete() {
-    if (busy) return;
-    const ok = window.confirm(`Delete “${task.title}”?`);
-    if (!ok) return;
-    await onDelete(task._id);
   }
 
   if (editing) {
@@ -119,7 +112,7 @@ export default function TaskItem({ task, onToggle, onUpdate, onDelete, busyId })
         <button
           type="button"
           className="icon-btn icon-btn-danger"
-          onClick={handleDelete}
+          onClick={() => onRequestDelete(task)}
           disabled={busy}
           title="Delete"
         >

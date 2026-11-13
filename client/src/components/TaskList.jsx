@@ -6,7 +6,7 @@ export default function TaskList({
   filter,
   onToggle,
   onUpdate,
-  onDelete,
+  onRequestDelete,
   busyId,
 }) {
   if (loading) {
@@ -49,7 +49,7 @@ export default function TaskList({
           task={task}
           onToggle={onToggle}
           onUpdate={onUpdate}
-          onDelete={onDelete}
+          onRequestDelete={onRequestDelete}
           busyId={busyId}
         />
       ))}
